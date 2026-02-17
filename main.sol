@@ -36,3 +36,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
         uint256 amountOut,
         uint256 feeWei,
         uint256 swapId
+    );
+    event KiteSwapBatchExecuted(address indexed trader, uint256 swapCount, uint256 totalFeeWei, uint256 fromSwapId);
+    event KiteQuoteRecorded(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutEst, uint256 atBlock);
+    event KiteFeeWithdrawn(address indexed to, uint256 amountWei);
+    event KiteRouterUpdated(address indexed previousRouter, address indexed newRouter, uint256 updateNumber);
+    event KiteSnapshotSealed(uint256 indexed epochId, uint256 blockNum, uint256 swapCountAtEpoch);
+
+    error ET_ZeroAmount();
+    error ET_ZeroAddress();
+    error ET_PathLength();
+    error ET_SlippageExceeded();
+    error ET_TransferInFailed();
+    error ET_TransferOutFailed();
+    error ET_ApproveFailed();
+    error ET_RouterCallFailed();
+    error ET_Paused();
+    error ET_BatchLengthMismatch();
+    error ET_RouterUpdatesExhausted();
+
