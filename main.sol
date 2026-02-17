@@ -74,3 +74,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
     bool public kitePaused;
 
     mapping(uint256 epochId => uint256 blockNum) private _snapshotBlock;
+    mapping(uint256 epochId => uint256 swapCount) private _snapshotSwapCount;
+
+    constructor() {
+        feeCollector = address(0x9C4d6E8f0A2b4c6D8e0F2a4B6c8d0E2f4A6b8C0d);
+        weth = address(0x2F5a7B9c1D3e5F7A9b1C3d5E7f9A1b3C5d7E9f1A);
+        router = address(0x4A6b8C0d2E4f6A8b0C2d4E6f8A0b2C4d6E8f0A2b);
+        genesisBlock = block.number;
+        domainSeed = keccak256(abi.encodePacked("EasyTradeV2_Kite_", block.chainid, block.timestamp, address(this)));
+    }
+
+    modifier whenNotPaused() {
+        if (kitePaused) revert ET_Paused();
+        _;
+    }
+
+    function setPaused(bool paused) external onlyOwner {
+        kitePaused = paused;
+    }
+
