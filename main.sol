@@ -150,3 +150,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
         emit KiteSwapExecuted(msg.sender, tokenIn, tokenOut, amountIn, amountOut, feeWei, swapCounter);
         return (amountOut, feeWei);
     }
+
+    struct SwapLeg {
+        address tokenIn;
+        address tokenOut;
+        uint256 amountIn;
+        uint256 amountOutMin;
+        uint256 deadline;
+    }
+
+    /// @notice Execute multiple exact-in swaps in one tx; reverts if any leg fails.
+    function executeSwapExactInBatch(SwapLeg[] calldata legs) external nonReentrant whenNotPaused returns (uint256 totalAmountOut, uint256 totalFeeWei) {
+        uint256 n = legs.length;
+        if (n == 0) revert ET_ZeroAmount();
+        uint256 fromSwapId = swapCounter + 1;
+
+        for (uint256 i; i < n; ) {
+            SwapLeg calldata leg = legs[i];
+            if (leg.amountIn == 0) revert ET_ZeroAmount();
+            if (leg.tokenIn == address(0) || leg.tokenOut == address(0)) revert ET_ZeroAddress();
