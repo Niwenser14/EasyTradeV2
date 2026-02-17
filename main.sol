@@ -188,3 +188,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
             uint256 balanceBefore = IERC20Min(leg.tokenOut).balanceOf(msg.sender);
 
             try IRouterMin(router).swapExactTokensForTokens(
+                amountInAfterFee,
+                leg.amountOutMin,
+                path,
+                msg.sender,
+                leg.deadline
+            ) { } catch {
+                IERC20Min(leg.tokenIn).approve(router, 0);
+                revert ET_RouterCallFailed();
+            }
+
+            IERC20Min(leg.tokenIn).approve(router, 0);
+            uint256 balanceAfter = IERC20Min(leg.tokenOut).balanceOf(msg.sender);
+            if (balanceAfter <= balanceBefore) revert ET_TransferOutFailed();
+            totalAmountOut += (balanceAfter - balanceBefore);
+
+            swapCounter++;
+            unchecked { ++i; }
+        }
+
