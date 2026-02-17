@@ -17,3 +17,22 @@ interface IERC20Min {
 
 interface IRouterMin {
     function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts);
+}
+
+contract EasyTradeV2 is ReentrancyGuard, Ownable {
+
+    event KiteSwapExecuted(
+        address indexed trader,
+        address indexed tokenIn,
+        address indexed tokenOut,
+        uint256 amountIn,
+        uint256 amountOut,
+        uint256 feeWei,
+        uint256 swapId
