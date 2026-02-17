@@ -93,3 +93,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
         kitePaused = paused;
     }
 
+    function setRouter(address newRouter) external onlyOwner {
+        if (routerUpdateCount >= MAX_ROUTER_UPDATES) revert ET_RouterUpdatesExhausted();
+        if (newRouter == address(0)) revert ET_ZeroAddress();
+        address prev = router;
+        router = newRouter;
+        routerUpdateCount++;
+        emit KiteRouterUpdated(prev, newRouter, routerUpdateCount);
+    }
+
+    function executeSwapExactIn(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint256 amountOutMin,
+        uint256 deadline
+    ) external nonReentrant whenNotPaused returns (uint256 amountOut, uint256 feeWei) {
+        if (amountIn == 0) revert ET_ZeroAmount();
+        if (tokenIn == address(0) || tokenOut == address(0)) revert ET_ZeroAddress();
+
