@@ -169,3 +169,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
             SwapLeg calldata leg = legs[i];
             if (leg.amountIn == 0) revert ET_ZeroAmount();
             if (leg.tokenIn == address(0) || leg.tokenOut == address(0)) revert ET_ZeroAddress();
+
+            address[] memory path = new address[](2);
+            path[0] = leg.tokenIn;
+            path[1] = leg.tokenOut;
+
+            uint256 feeWei = (leg.amountIn * FEE_BPS) / BPS_DENOM;
+            uint256 amountInAfterFee = leg.amountIn - feeWei;
+            totalFeeWei += feeWei;
+
+            IERC20Min(leg.tokenIn).transferFrom(msg.sender, address(this), leg.amountIn);
+            if (feeWei > 0) {
+                bool ok = IERC20Min(leg.tokenIn).transfer(feeCollector, feeWei);
+                if (!ok) revert ET_TransferOutFailed();
+            }
+
+            IERC20Min(leg.tokenIn).approve(router, amountInAfterFee);
+            uint256 balanceBefore = IERC20Min(leg.tokenOut).balanceOf(msg.sender);
+
+            try IRouterMin(router).swapExactTokensForTokens(
