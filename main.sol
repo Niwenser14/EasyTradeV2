@@ -55,3 +55,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
     error ET_BatchLengthMismatch();
     error ET_RouterUpdatesExhausted();
 
+    uint256 public constant AGGREGATOR_SLIPPAGE_BPS = 50;
+    uint256 public constant FEE_BPS = 10;
+    uint256 public constant BPS_DENOM = 10000;
+    uint256 public constant MIN_PATH_LEN = 2;
+    uint256 public constant MAX_PATH_LEN = 6;
+    uint256 public constant MAX_ROUTER_UPDATES = 5;
+    uint256 public constant KITE_DOMAIN_SEED = 0x3c5e7a9f1b4d6e8c0a2b4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b;
+
+    address public immutable feeCollector;
+    address public immutable weth;
+    uint256 public immutable genesisBlock;
+    bytes32 public immutable domainSeed;
+
+    address public router;
+    uint256 public routerUpdateCount;
+    uint256 public swapCounter;
+    bool public kitePaused;
+
+    mapping(uint256 epochId => uint256 blockNum) private _snapshotBlock;
