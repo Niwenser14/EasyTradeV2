@@ -207,3 +207,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
             unchecked { ++i; }
         }
 
+        emit KiteSwapBatchExecuted(msg.sender, n, totalFeeWei, fromSwapId);
+        return (totalAmountOut, totalFeeWei);
+    }
+
+    function executeSwapExactInMultiHop(
+        address[] calldata path,
+        uint256 amountIn,
+        uint256 amountOutMin,
+        uint256 deadline
+    ) external nonReentrant whenNotPaused returns (uint256 amountOut, uint256 feeWei) {
+        if (path.length < MIN_PATH_LEN || path.length > MAX_PATH_LEN) revert ET_PathLength();
+        if (amountIn == 0) revert ET_ZeroAmount();
+        if (path[0] == address(0) || path[path.length - 1] == address(0)) revert ET_ZeroAddress();
+
+        feeWei = (amountIn * FEE_BPS) / BPS_DENOM;
+        uint256 amountInAfterFee = amountIn - feeWei;
+
+        IERC20Min(path[0]).transferFrom(msg.sender, address(this), amountIn);
+        if (feeWei > 0) {
