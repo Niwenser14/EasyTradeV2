@@ -264,3 +264,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
         emit KiteSnapshotSealed(epochId, block.number, swapCounter);
     }
 
+    /// @notice Quote exact-in raw output from router (no fee deducted).
+    function quoteExactIn(address tokenIn, address tokenOut, uint256 amountIn)
+        external
+        view
+        returns (uint256 amountOutEst)
+    {
+        if (amountIn == 0 || tokenIn == address(0) || tokenOut == address(0)) return 0;
+        address[] memory p = _path(tokenIn, tokenOut);
+        try IRouterMin(router).getAmountsOut(amountIn, p) returns (uint256[] memory amounts) {
+            if (amounts.length < 2) return 0;
+            return amounts[amounts.length - 1];
+        } catch {
+            return 0;
+        }
+    }
+
+    /// @notice Quote exact-in output after deducting fee from input (amountIn * (1 - FEE_BPS/BPS_DENOM)).
+    function quoteExactInNet(address tokenIn, address tokenOut, uint256 amountIn)
+        external
