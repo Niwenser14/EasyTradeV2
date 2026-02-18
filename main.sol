@@ -302,3 +302,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
         address[] memory p = new address[](2);
         p[0] = tokenIn;
         p[1] = tokenOut;
+        return p;
+    }
+
+    function getSnapshot(uint256 epochId) external view returns (uint256 blockNum, uint256 swapCountAtEpoch) {
+        return (_snapshotBlock[epochId], _snapshotSwapCount[epochId]);
+    }
+
+    /// @notice Keccak256 commitment of (domainSeed, swapCounter, genesisBlock) for off-chain verification.
+    function getStateCommitment() external view returns (bytes32) {
+        return keccak256(abi.encode(domainSeed, swapCounter, genesisBlock));
+    }
+
+    function getSwapCount() external view returns (uint256) {
+        return swapCounter;
+    }
+
+    function withdrawStuckToken(address token, address to, uint256 amount) external onlyOwner {
+        if (to == address(0)) revert ET_ZeroAddress();
+        bool ok = IERC20Min(token).transfer(to, amount);
