@@ -245,3 +245,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
         } catch {
             IERC20Min(path[0]).approve(router, 0);
             revert ET_RouterCallFailed();
+        }
+
+        IERC20Min(path[0]).approve(router, 0);
+        uint256 balanceAfter = IERC20Min(tokenOut).balanceOf(msg.sender);
+        if (balanceAfter <= balanceBefore) revert ET_TransferOutFailed();
+        amountOut = balanceAfter - balanceBefore;
+
+        swapCounter++;
+        emit KiteSwapExecuted(msg.sender, path[0], tokenOut, amountIn, amountOut, feeWei, swapCounter);
+        return (amountOut, feeWei);
+    }
+
+    /// @notice Seal current swap count and block for an epoch (owner only); for settlement reporting.
+    function snapshot(uint256 epochId) external onlyOwner {
+        _snapshotBlock[epochId] = block.number;
+        _snapshotSwapCount[epochId] = swapCounter;
+        emit KiteSnapshotSealed(epochId, block.number, swapCounter);
+    }
+
