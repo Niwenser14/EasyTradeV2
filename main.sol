@@ -321,3 +321,6 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
     function withdrawStuckToken(address token, address to, uint256 amount) external onlyOwner {
         if (to == address(0)) revert ET_ZeroAddress();
         bool ok = IERC20Min(token).transfer(to, amount);
+        if (!ok) revert ET_TransferOutFailed();
+    }
+}
