@@ -283,3 +283,22 @@ contract EasyTradeV2 is ReentrancyGuard, Ownable {
     /// @notice Quote exact-in output after deducting fee from input (amountIn * (1 - FEE_BPS/BPS_DENOM)).
     function quoteExactInNet(address tokenIn, address tokenOut, uint256 amountIn)
         external
+        view
+        returns (uint256 amountOutEstAfterFee)
+    {
+        if (amountIn == 0 || tokenIn == address(0) || tokenOut == address(0)) return 0;
+        uint256 feeWei = (amountIn * FEE_BPS) / BPS_DENOM;
+        uint256 amountInAfterFee = amountIn - feeWei;
+        address[] memory p = _path(tokenIn, tokenOut);
+        try IRouterMin(router).getAmountsOut(amountInAfterFee, p) returns (uint256[] memory amounts) {
+            if (amounts.length < 2) return 0;
+            return amounts[amounts.length - 1];
+        } catch {
+            return 0;
+        }
+    }
+
+    function _path(address tokenIn, address tokenOut) internal pure returns (address[] memory) {
+        address[] memory p = new address[](2);
+        p[0] = tokenIn;
+        p[1] = tokenOut;
